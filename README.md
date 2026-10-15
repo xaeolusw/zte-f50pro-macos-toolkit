@@ -1,4 +1,4 @@
-# 中兴 F50 Pro (MU3356) macOS 全能玩机工具箱 & 方案B透明软路由
+# 中兴 F50 Pro (MU3356) macOS 全能玩机工具箱 & 5G CPE 透明软路由代理 ＋ Tailscale
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-macOS%20(Apple%20Silicon%20%26%20Intel)-brightgreen" alt="macOS">
@@ -7,11 +7,11 @@
   <img src="https://img.shields.io/badge/SoC-Unisoc%20T760-red" alt="Unisoc T760">
   <img src="https://img.shields.io/badge/Kernel-Mihomo%20v1.19-purple" alt="Mihomo">
   <img src="https://img.shields.io/badge/VPN-Tailscale%20v1.104-informational" alt="Tailscale">
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
+  <img src="https://img.shields.io/badge/License-MIT%20with%20Anti--Scalping-green" alt="License">
   <img src="https://img.shields.io/badge/Author-shuangye-blueviolet" alt="Author">
 </p>
 
-专为 **中兴 F50 Pro 5G 随身 WiFi (MU3356, 紫光展锐 Unisoc T760 芯片, Android 15)** 深度定制的 macOS 平台免驱一键刷机、提权、透明代理（Mihomo）、异地组网（Tailscale）与出厂救砖全套解决方案。
+专为 **中兴 F50 Pro 5G 随身 WiFi (MU3356, 紫光展锐 Unisoc T760 芯片, Android 15)** 深度定制的 macOS 平台免驱一键刷机、提权、5G CPE 透明软路由代理（Mihomo）、异地穿透组网（Tailscale）与出厂芯片级救砖全套解决方案。
 
 彻底解决 Mac 用户没有 Windows SPD 刷机驱动、随身 WiFi 无触摸屏无法点 Root 授权、Android 15 开机后台被杀、冷启动 5G 基带网络不同步导致的 TUN 路由崩溃，以及默认巨帧 MTU 限速等一系列棘手问题。
 
@@ -74,28 +74,28 @@ graph TD
 
 ```text
 中兴F50Pro_macOS一键工具包_shuangye/
-├── 【方案B】软路由与穿透管理中心.command  # 🌟 方案B核心总控（自启/Mihomo/Tailscale/订阅管理）
-├── F50Pro一键工具箱.command               # 🌟 官方综合工具箱（Root/UFI增强后台/网络急救）
-├── 【一键全量备份固件】F50Pro.command       # 🛡️ 芯片级全量物理分区备份（生成完整镜像）
-├── 【一键底层救砖还原】F50Pro.command       # 🚑 100% 底层免开机救砖回滚
-├── README.md                              # 本说明文档
-├── LICENSE                                # MIT 开源协议
-├── 【重要交接文档】F50Pro方案B软路由与救砖全解.md # 📖 深度技术架构与排障完全手册
-├── bin/                                   # 核心固件与工具依赖（无需额外配置）
-│   ├── adb                                # macOS 通用架构 ADB
-│   ├── spd_dump_mac                       # macOS 通用架构展锐 BootROM 刷机工具
-│   ├── tos.bin                            # TrustOS 补丁（Root + 无线ADB）
-│   ├── magisk.img                         # Magisk init_boot 补丁（免密提权）
-│   ├── UFI-TOOLS.apk                      # 增强 Web 管理后台 (2333 端口)
-│   └── ...                                # 引导加载与签名绕过补丁
-└── scheme_b/                              # 方案B核心资产库
-    ├── mihomo                             # ARM64 Mihomo (Clash.Meta) 内核
-    ├── tailscale / tailscaled             # ARM64 Tailscale 异地组网套件
-    ├── config.yaml                        # 针对 5G 调优的透明代理配置 (MTU 1400)
-    ├── autorun.sh                         # 开机自启看门狗 (基带 IP 探针 + 进程/TUN 守护)
-    ├── start.sh / stop.sh / status.sh     # 防火墙与服务控制脚本
-    ├── merge_sub.py                       # 智能订阅合并器（保留 5G 软路由优化项）
-    └── ui/                                # MetaCubeXD WebUI 面板 (已预置免填配置)
+├── 【5G CPE透明软路由】Mihomo与Tailscale穿透中心.command  # 🌟 5G CPE透明软路由核心总控
+├── F50Pro一键工具箱.command                               # 🌟 官方综合工具箱（Root/UFI增强后台/网络急救）
+├── 【一键全量备份固件】F50Pro.command                       # 🛡️ 芯片级全量物理分区备份（生成完整镜像）
+├── 【一键底层救砖还原】F50Pro.command                       # 🚑 100% 底层免开机救砖回滚
+├── README.md                                              # 本说明文档
+├── LICENSE                                                # MIT 开源协议（含反倒卖特别条款）
+├── 【重要技术全解】中兴F50Pro软路由与底层救砖交接文档.md                 # 📖 深度技术架构与排障完全手册
+├── bin/                                                   # 核心固件与工具依赖（无需额外配置）
+│   ├── adb                                                # macOS 通用架构 ADB
+│   ├── spd_dump_mac                                       # macOS 通用架构展锐 BootROM 刷机工具
+│   ├── tos.bin                                            # TrustOS 补丁（Root + 无线ADB）
+│   ├── magisk.img                                         # Magisk init_boot 补丁（免密提权）
+│   ├── UFI-TOOLS.apk                                      # 增强 Web 管理后台 (2333 端口)
+│   └── ...                                                # 引导加载与签名绕过补丁
+└── scheme_b/                                              # 5G CPE 软路由资产库
+    ├── mihomo                                             # ARM64 Mihomo (Clash.Meta) 内核
+    ├── tailscale / tailscaled                             # ARM64 Tailscale 异地组网套件
+    ├── config.yaml                                        # 针对 5G 调优的透明代理配置 (MTU 1400)
+    ├── autorun.sh                                         # 开机自启看门狗 (基带 IP 探针 + 进程/TUN 守护)
+    ├── start.sh / stop.sh / status.sh                     # 防火墙与服务控制脚本
+    ├── merge_sub.py                                       # 智能订阅合并器（保留 5G 软路由优化项）
+    └── ui/                                                # MetaCubeXD WebUI 面板 (已预置免填配置)
 ```
 
 ---
@@ -105,12 +105,12 @@ graph TD
 ### 1. 下载工具包
 前往 [Releases 页面](../../releases) 下载已打包好的 `中兴F50Pro_macOS一键工具包_shuangye.zip` 并解压。
 
-### 2. 部署方案B透明软路由（推荐）
-1. 双击运行 **`【方案B】软路由与穿透管理中心.command`**。
+### 2. 部署 5G CPE 透明软路由 ＋ Tailscale（推荐）
+1. 双击运行 **`【5G CPE透明软路由】Mihomo与Tailscale穿透中心.command`**。
 2. 输入 **`1`**（一键刷入开机自启补丁）。
 3. 按照提示输入您的 Mac 开机密码，然后将断开电源的 F50 Pro 插入 Mac USB 口。
-4. 工具会自动完成 BootROM 刷入并引导开机；开机后脚本会**自动连续部署方案B全套组件与开机自启看门狗**！
-5. 在主菜单输入 **`5`**，粘贴您的 Clash 机场订阅链接（智能合并节点与分流规则）。
+4. 工具会自动完成 BootROM 刷入并引导开机；开机后脚本会**自动连续部署软路由全套组件与开机自启看门狗**！
+5. 在主菜单输入 **`5`**，粘贴您的 Clash 机场订阅链接（智能合并节点与分流规则，保留 5G CPE 优化参数）。
 6. 在主菜单输入 **`3`**，浏览器将直接打开 Web 控制面板 (`http://192.168.0.1:9090/ui`)。
 
 ### 3. 日常使用
@@ -140,18 +140,26 @@ graph TD
 
 ---
 
-## ⚖️ 开源协议与致谢
+## 👨‍💻 关于作者 & 关注交流
+
+- **项目作者**: **shuangye** ([@Tai1win10c](https://github.com/Tai1win10c))
+- **B 站主页**: 视频实操教程与后续固件更新动态筹备中，敬请关注！*(账号确定后将第一时间公布)*
+- **欢迎 Star ⭐️**: 如果本项目帮到了你，请给本项目点亮一颗 **Star**，这是对开源作者最大的支持与鼓励！
+
+---
+
+## ⚖️ 开源协议、致谢与灵感参考
 
 - **作者 / 架构设计**: **shuangye** ([@Tai1win10c](https://github.com/Tai1win10c))
 - **开源协议**: 本项目遵循带有【反商业倒卖附加条款】的 [MIT License](LICENSE)。任何二次分发均必须严格保留原作者署名与开源仓库地址，且不得用于任何商业营利。
-- **项目致谢**:
-  - [spreadtrum_flash](https://github.com/handsomehack/spreadtrum_flash) 提供紫光展锐 BootROM 芯片级刷机通信基础
-  - [kanoqwq/UFI-TOOLS](https://github.com/kanoqwq/ufi-tools) 随身 WiFi 工具生态启发
-  - [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) 优秀的透明软路由内核
-  - [Tailscale](https://tailscale.com) 优秀的异地组网网格网络
+- **项目致谢与灵感来源**:
+  - **UFI-TOOLS 灵感与技术参考**: 感谢 [kanoqwq/UFI-TOOLS](https://github.com/kanoqwq/UFI-TOOLS)（参见 [UFI-TOOLS 随身 WiFi 使用文档](https://github.com/kanoqwq/UFI-TOOLS/blob/http-server-version/User_Doc.md#32-%E5%AE%89%E8%A3%85%E5%89%8D%E8%BF%9E%E6%8E%A5%E8%AE%BE%E5%A4%87)），为随身 WiFi 设备开机提权、Fastboot/BootROM 交互及增强 Web 后台提供了宝贵的技术思路与启发。
+  - **透明软路由内核**: [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) 优秀的透明路由代理内核。
+  - **Web 控制面板**: [MetaCubeX/metacubexd](https://github.com/MetaCubeX/metacubexd) 优秀的 Web 仪表盘。
+  - **异地互联组网**: [Tailscale](https://tailscale.com) 优秀的网状虚拟局域网。
+  - **底层刷机通信**: [spreadtrum_flash](https://github.com/handsomehack/spreadtrum_flash) 提供紫光展锐 BootROM 芯片级刷机通信基础。
 
 ---
 
 ### 免责声明
 本工具仅供网络技术研究与个人随身 WiFi 优化交流使用。请合法合规使用网络。作者不对因第三方不当操作或硬件老化导致的设备损坏承担连带责任。
-
