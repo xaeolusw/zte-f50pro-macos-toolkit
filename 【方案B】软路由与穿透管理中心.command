@@ -9,10 +9,10 @@ if [ -d "$SCRIPT_DIR/bin" ]; then
     BASE_DIR="$SCRIPT_DIR"
 elif [ -d "$HOME/Downloads/中兴F50Pro_macOS一键工具包_shuangye/bin" ]; then
     BASE_DIR="$HOME/Downloads/中兴F50Pro_macOS一键工具包_shuangye"
-elif [ -d "/Users/openmoon/Downloads/中兴F50Pro_macOS一键工具包_shuangye/bin" ]; then
-    BASE_DIR="/Users/openmoon/Downloads/中兴F50Pro_macOS一键工具包_shuangye"
+elif [ -d "$HOME/Desktop/中兴F50Pro_macOS一键工具包_shuangye/bin" ]; then
+    BASE_DIR="$HOME/Desktop/中兴F50Pro_macOS一键工具包_shuangye"
 else
-    echo "❌ 错误：找不到核心资源目录 (bin/)，请确保中兴F50Pro_macOS一键工具包_shuangye位于下载文件夹中。"
+    echo "❌ 错误：找不到核心资源目录 (bin/)，请确保工具包位于 Downloads 或 Desktop 文件夹中。"
     read dummy
     exit 1
 fi
@@ -289,10 +289,12 @@ restart_services() {
 
 while true; do
     clear
-    echo "========================================================"
-    echo "   中兴 F50 Pro 方案B：Mihomo 透明软路由 + Tailscale 穿透"
-    echo "   作者: shuangye"
-    echo "========================================================"
+    echo "================================================================================"
+    echo "  🚀 中兴 F50 Pro 方案B：Mihomo 透明软路由 + Tailscale 穿透管理中心"
+    echo "  🔥 原创作者: shuangye  |  开源项目: 永久完全免费！"
+    echo "  ⚠️ 严正防诈警告: 本工具完全免费开源，严禁任何形式的倒卖、转售或有偿代刷！"
+    echo "     若您是在闲鱼、淘宝、拼多多等平台花钱购买的，您已被骗，请立即向平台举报退款！"
+    echo "================================================================================"
     echo " [1] ⚡ 一键刷入开机自启补丁 (BootROM 芯片直刷，只需拔插1次)"
     echo " [2] 📦 一键部署/同步 方案B 核心组件与自启看门狗 (新机/复用一键就绪)"
     echo " [3] 🌐 打开 Mihomo Web 控制面板 (http://192.168.0.1:9090/ui)"
@@ -303,7 +305,7 @@ while true; do
     echo " [8] ⏹️ 停止所有方案B服务 (恢复原生路由器模式)"
     echo " [9] 🔄 重启所有方案B服务"
     echo " [0] 退出"
-    echo "========================================================"
+    echo "================================================================================"
     read -p "请输入选项 [0-9]: " choice
 
     case "$choice" in

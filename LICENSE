@@ -1,6 +1,6 @@
-MIT License
+MIT License with Anti-Commercial Scalping Clause
 
-Copyright (c) 2026 shuangye
+Copyright (c) 2026 shuangye (https://github.com/shuangye)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -9,8 +9,15 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. The above copyright notice, this permission notice, and the anti-scalping
+   warning must be retained in all copies or substantial portions of the Software.
+
+2. NON-COMMERCIAL & ANTI-SCALPING RESTRICTIONS (严禁商业倒卖与有偿服务条款):
+   - 本项目（中兴 F50 Pro macOS 工具箱及方案B全套方案）为个人原创、永久开源、完全免费的公益项目。
+   - 严禁任何个人、商家、平台（包括但不限于闲鱼、淘宝、拼多多、微商、抖音、B站等）将本工具、
+     脚本、配置文件或衍生作品用于任何商业销售、付费打包、会员专属下载或有偿代刷服务。
+   - 严禁擅自抹去或篡改原作者（shuangye）署名与开源项目原链接。
+   - 任何消费者如因付费获取本软件，均属遭遇第三方欺诈，请保留购买证据向交易平台及市场监管部门举报维权。
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,

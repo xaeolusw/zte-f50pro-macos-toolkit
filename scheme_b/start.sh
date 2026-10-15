@@ -1,6 +1,9 @@
 #!/system/bin/sh
+# ========================================================
 # F50 Pro Scheme B: Start Mihomo & Tailscale
-# Author: shuangye
+# Author: shuangye (https://github.com/shuangye)
+# Open-source Free Project - Prohibited for commercial sale
+# ========================================================
 
 DIR="/data/local/tmp/scheme_b"
 LOG="$DIR/service.log"

@@ -10,10 +10,10 @@ if [ -d "$SCRIPT_DIR/bin" ]; then
     BASE_DIR="$SCRIPT_DIR"
 elif [ -d "$HOME/Downloads/中兴F50Pro_macOS一键工具包_shuangye/bin" ]; then
     BASE_DIR="$HOME/Downloads/中兴F50Pro_macOS一键工具包_shuangye"
-elif [ -d "/Users/openmoon/Downloads/中兴F50Pro_macOS一键工具包_shuangye/bin" ]; then
-    BASE_DIR="/Users/openmoon/Downloads/中兴F50Pro_macOS一键工具包_shuangye"
+elif [ -d "$HOME/Desktop/中兴F50Pro_macOS一键工具包_shuangye/bin" ]; then
+    BASE_DIR="$HOME/Desktop/中兴F50Pro_macOS一键工具包_shuangye"
 else
-    echo "❌ 错误：找不到核心资源目录 (bin/)，请确保中兴F50Pro_macOS一键工具包_shuangye位于下载文件夹中。"
+    echo "❌ 错误：找不到核心资源目录 (bin/)，请确保工具包位于 Downloads 或 Desktop 文件夹中。"
     read dummy
     exit 1
 fi
@@ -21,13 +21,15 @@ cd "$BASE_DIR"
 
 # 检查管理员权限
 if [ "$EUID" -ne 0 ]; then
-    echo "========================================================"
+    echo "================================================================================"
     echo "  中兴 F50 Pro (B25) 一键工具箱 (macOS 原生版)"
-    echo "  作者: shuangye"
-    echo "========================================================"
+    echo "  🔥 原创作者: shuangye  |  开源项目: 永久完全免费！"
+    echo "  ⚠️ 严正防诈警告: 本工具完全开源免费，严禁任何形式的倒卖、转售或有偿代刷！"
+    echo "     若您是在闲鱼、淘宝、拼多多等平台花钱购买的，您已被骗，请立即向平台举报退款！"
+    echo "================================================================================"
     echo "提示：macOS 底层 USB 通信需要管理员权限以接管设备。"
     echo "请输入您的 Mac 开机密码并回车（输入时密码不显示属于正常现象）："
-    echo "========================================================"
+    echo "================================================================================"
     sudo "$0" "$@"
     exit $?
 fi
@@ -80,10 +82,12 @@ get_online_device() {
 
 while true; do
     clear
-    echo "========================================================"
-    echo "      中兴 F50 Pro (B25) macOS 一键工具箱"
-    echo "      作者: shuangye"
-    echo "========================================================"
+    echo "================================================================================"
+    echo "      中兴 F50 Pro (B25) macOS 原生一键玩机工具箱"
+    echo "      🔥 原创作者: shuangye  |  开源项目: 永久完全免费！"
+    echo "      ⚠️ 严正防诈警告: 本工具完全开源免费，严禁任何形式的倒卖、转售或有偿代刷！"
+    echo "         若您是在闲鱼、淘宝、拼多多等平台花钱购买的，您已被骗，请立即举报退款！"
+    echo "================================================================================"
     echo " [1] 一键 Root + 开启无线 ADB (直接插电，推荐)"
     echo " [2] 一键部署 UFI-TOOLS 网页增强后台 (端口 2333)"
     echo " [3] 检查并连接设备 (有线 + 192.168.0.1 无线)"

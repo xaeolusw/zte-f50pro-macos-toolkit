@@ -77,7 +77,8 @@ HTML_PAGE = """<!DOCTYPE html>
 <body>
     <div class="header">
         <h1>📱 中兴 F50 Pro 实时投屏与交互控制台</h1>
-        <p>支持画面实时点击、Magisk 授权确认与按键导航</p>
+        <p>作者: shuangye | 本项目永久开源免费，严禁倒卖</p>
+        <p style="font-size: 11px; color: #6e6e88; margin-top: 2px;">支持画面实时点击、Magisk 授权确认与按键导航</p>
     </div>
 
     <div class="container">
