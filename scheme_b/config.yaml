@@ -1,0 +1,87 @@
+# ========================================================
+# 中兴 F50 Pro Mihomo 高性能透明软路由配置
+# 作者: shuangye
+# ========================================================
+
+port: 7890
+socks-port: 7891
+mixed-port: 7892
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+ipv6: false
+
+# 绑定 5G 物理出口网卡 (紫光展锐 T760 硬件加速通道)
+interface-name: sipa_eth8
+
+# RESTful API 与 Web 控制面板 (http://192.168.0.1:9090/ui)
+external-controller: 0.0.0.0:9090
+external-ui: /data/local/tmp/scheme_b/ui
+secret: ''
+
+# TUN 高性能透明代理 (针对 5G 调制解调器优化 MTU 与栈)
+tun:
+  enable: true
+  stack: mixed
+  device: tun0
+  auto-route: true
+  auto-detect-interface: false
+  mtu: 1400
+  gso: true
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+
+# 内置智能极速 DNS
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - '*.lan'
+    - 'localhost.ptlogin2.qq.com'
+    - '+.msftconnecttest.com'
+    - '+.msftncsi.com'
+    - '+.qualcomm.com'
+    - '+.zte.com.cn'
+    - '+.zte.com'
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 180.76.76.76
+    - https://dns.alidns.com/dns-query
+  fallback:
+    - 119.29.29.29
+    - 223.5.5.5
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+
+proxy-groups:
+  - name: 🚀 节点选择
+    type: select
+    proxies:
+      - 🎯 全球直连
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies:
+      - 🚀 节点选择
+      - 🎯 全球直连
+  - name: 🎯 全球直连
+    type: select
+    proxies:
+      - DIRECT
+
+proxies: []
+
+rules:
+  - GEOIP,lan,🎯 全球直连,no-resolve
+  - GEOSITE,cn,🎯 全球直连
+  - GEOIP,CN,🎯 全球直连
+  - MATCH,🐟 漏网之鱼
