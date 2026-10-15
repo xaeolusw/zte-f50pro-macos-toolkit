@@ -1,4 +1,8 @@
-# 中兴 F50 Pro (MU3356) macOS 全能玩机工具箱 & 5G CPE 透明软路由代理 ＋ Tailscale
+# ZTE F50 Pro (MU3356) macOS Toolkit & 5G CPE Transparent Proxy + Tailscale
+
+<p align="center">
+  <b>English</b> | <a href="README_CN.md"><b>简体中文</b></a>
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-macOS%20(Apple%20Silicon%20%26%20Intel)-brightgreen" alt="macOS">
@@ -11,155 +15,128 @@
   <img src="https://img.shields.io/badge/Author-shuangye-blueviolet" alt="Author">
 </p>
 
-专为 **中兴 F50 Pro 5G 随身 WiFi (MU3356, 紫光展锐 Unisoc T760 芯片, Android 15)** 深度定制的 macOS 平台免驱一键刷机、提权、5G CPE 透明软路由代理（Mihomo）、异地穿透组网（Tailscale）与出厂芯片级救砖全套解决方案。
+A dedicated, driverless macOS toolkit engineered for the **ZTE F50 Pro 5G Mobile Wi-Fi (MU3356, Unisoc T760 SoC, Android 15)**. Provides one-click chip-level BootROM flashing, permanent Root privilege authorization, a high-performance **5G CPE Transparent Proxy (Mihomo)**, mesh VPN networking (**Tailscale**), and 100% brick rescue.
 
-彻底解决 Mac 用户没有 Windows SPD 刷机驱动、随身 WiFi 无触摸屏无法点 Root 授权、Android 15 开机后台被杀、冷启动 5G 基带网络不同步导致的 TUN 路由崩溃，以及默认巨帧 MTU 限速等一系列棘手问题。
-
----
-
-## 🌟 核心亮点与痛点攻坚
-
-1. **⚡ macOS 原生 BootROM 芯片级免驱直刷**：
-   - 内置编译好的通用架构（Universal 2）底层通信工具 `spd_dump_mac`，原生支持 Apple Silicon (M1/M2/M3/M4) 与 Intel Mac。
-   - 彻底摆脱 Windows 复杂的 SPD 端口驱动与签名限制，插上 Type-C 即可直连芯片底层。
-2. **🔑 底层永久 Root 与免密免弹窗提权**：
-   - 针对随身 WiFi 无屏幕、弹出的 Magisk 授权窗口无法触摸点击的死局，定制 `init_boot` 补丁，在引导阶段直接注入 SQLite 底层权限（UID 2000 永久放行），ADB 免交互秒获最高权限。
-3. **🛡️ 独家 Android 15 SIGHUP 免疫与高可用看门狗**：
-   - 攻克 Android 15 init 进程组销毁时向下派发 `SIGHUP` 强杀后台进程的系统特性（使用 `( trap '' HUP ... ) &` 子 Shell 守护）。
-   - 标准化接入 Magisk `service.d` 晚期自启机制（`/data/adb/service.d/mihomo_autostart.sh`）。
-4. **⏱️ 独家 5G 基带冷启动时序对齐探针**：
-   - F50 Pro 开机第 1 秒物理网卡 `sipa_eth8` 虽已创建，但运营商蜂窝 IP 需等待 15~25 秒才完成分配。本看门狗采用精准状态探针，杜绝了提前拉起软路由导致 `TUN route: network unreachable` 的断网 Bug。
-   - 常驻看门狗每 15 秒双重健康检查（同时探测 `pidof mihomo` 和 `ip link show tun0`），掉线 1 秒无感拉起。
-5. **🚀 100 Mbps 满血网速调优**：
-   - 修复官方 TUN 默认 MTU 9000 巨帧被 5G 基带静默丢弃导致的严重卡顿。
-   - 调优为 `MTU 1400` + 用户态高性能栈 `stack: mixed` (GVisor) + `TCPMSS --clamp-mss-to-pmtu`，实测下载吞吐直接跑满 100Mbps 蜂窝物理带宽。
-6. **🌐 零配置 Web 控制面板**：
-   - 内置 MetaCubeXD Web 资源（端口 9090），预置配置免输后端与空密钥，双击一键呼出控制面板。
-7. **🔒 Tailscale 异地互联 & 出口节点**：
-   - 一键开启后台并宣告内网子网（`192.168.0.0/24`），出差在外随时访问家中的 F50 Pro 与局域网设备。
-8. **🚑 100% 芯片级全量物理备份与救砖**：
-   - 一键全量备份整机 6.2GB 芯片物理镜像（包含关键基带 NVRAM、`prodnv` 唯一 IMEI 分区、`super` 系统分区），即使设备变砖卡标也能通过硬件 BootROM 一键满血复活。
+Completely eliminates the hurdles macOS users previously faced: absence of Windows SPD flash drivers, inability to touch/confirm root permission popups on a screenless MiFi device, Android 15 process group background kills, cold-boot 5G modem cellular IP timing mismatches that crashed TUN routing, and default jumbo frame MTU packet-drop throttling.
 
 ---
 
-## 🏗️ 架构拓扑图
+## 🌟 Key Highlights & Engineering Breakthroughs
 
-```mermaid
-graph TD
-    subgraph WAN ["5G 物理广域网 (WAN)"]
-        Tower["5G 移动蜂窝基站 (电信/联通/移动)"] --> Modem["紫光展锐 T760 5G 基带"]
-        Modem --> SIPA["sipa_eth8 (SIPA 硬件加速通道)"]
-    end
-
-    subgraph Core ["F50 Pro 核心系统 (Android 15 / Magisk 提权)"]
-        SIPA --> Route["Linux Policy Routing (main & sipa_eth8 表)"]
-        Route --> Watchdog["常驻看门狗守护 (/data/adb/service.d/)"]
-        Watchdog --> TUN["tun0 (Mihomo Mixed Stack, MTU 1400)"]
-        TUN --> Mihomo["Mihomo 内核 (Port 9090 / 7890 / 1053)"]
-        TUN --> Tailscale["Tailscaled 守护进程 (Port 41641)"]
-    end
-
-    subgraph LAN ["局域网客户端 (LAN)"]
-        Mihomo --> Bridge["br0 (192.168.0.1/24 网桥)"]
-        Bridge --> WiFi["wlan0 (Wi-Fi 6 热点 AP)"]
-        Bridge --> USB["usb0 (USB NCM 电脑连接)"]
-        WiFi --> Clients1["手机 / 平板 / 智能家居"]
-        USB --> Clients2["Mac / PC 主机"]
-    end
-```
+1. **⚡ Native macOS Driverless BootROM Flashing**:
+   - Built-in Universal 2 binary `spd_dump_mac`, natively supporting Apple Silicon (M1/M2/M3/M4) and Intel Macs.
+   - Eliminates Windows SPD driver conflicts and driver signature requirements—plug via Type-C to communicate directly with the BootROM.
+2. **🔑 Permanent Root with Zero-Prompt Elevation**:
+   - Overcomes the headless dilemma where Magisk elevation dialogs cannot be physically tapped. Patches `init_boot` during early boot to inject SQLite permissions (UID 2000 shell permanently granted), allowing ADB commands instant root access without interactive prompts.
+3. **🛡️ Android 15 SIGHUP-Immune High-Availability Watchdog**:
+   - Overcomes Android 15's behavior of terminating background processes via `SIGHUP` when init process groups exit (using a `( trap '' HUP ... ) &` subshell daemon).
+   - Standard integration with Magisk `service.d` late-start service directory (`/data/adb/service.d/mihomo_autostart.sh`).
+4. **⏱️ 5G Modem Cold-Boot Cellular IP Timing Probe**:
+   - On cold boot, kernel interface `sipa_eth8` appears at second 1, but baseband registration and cellular IP assignment take 15–25 seconds. The watchdog polls for the actual cellular `inet` IP before launching routing services, preventing `TUN route: network unreachable` errors.
+   - Dual-health watchdog continuously polls every 15 seconds (verifying both `pidof mihomo` and `ip link show tun0`), automatically recovering in 1 second upon failure.
+5. **🚀 Line-Rate 100 Mbps Cellular Throughput**:
+   - Fixes carrier packet loss caused by default `mtu: 9000` jumbo frames on 5G modems.
+   - Tuned to `MTU 1400` + user-space TCP stack `stack: mixed` (GVisor) + `TCPMSS --clamp-mss-to-pmtu`, achieving full 100 Mbps real-world download throughput.
+6. **🌐 Zero-Configuration Web Dashboard**:
+   - Embedded MetaCubeXD Web dashboard (Port 9090) with pre-configured backend endpoints and empty secrets for immediate access.
+7. **🔒 Tailscale Mesh VPN & Subnet Routing**:
+   - One-click background daemon with automated subnet routing announcement (`192.168.0.0/24`) and exit-node capabilities.
+8. **🚑 100% Chip-Level Raw Backup & Factory Restore**:
+   - One-click raw clone of all 6.2GB chip partitions (including critical baseband NVRAM, radio calibration data, `prodnv` IMEI partition, and `super` system partition) for 30-second BootROM brick recovery.
 
 ---
 
-## 📁 目录结构
+## 📁 Repository Structure
 
 ```text
 中兴F50Pro_macOS一键工具包_shuangye/
-├── 【5G CPE透明软路由】Mihomo与Tailscale穿透中心.command  # 🌟 5G CPE透明软路由核心总控
-├── F50Pro一键工具箱.command                               # 🌟 官方综合工具箱（Root/UFI增强后台/网络急救）
-├── 【一键全量备份固件】F50Pro.command                       # 🛡️ 芯片级全量物理分区备份（生成完整镜像）
-├── 【一键底层救砖还原】F50Pro.command                       # 🚑 100% 底层免开机救砖回滚
-├── README.md                                              # 本说明文档
-├── LICENSE                                                # MIT 开源协议（含反倒卖特别条款）
-├── 【重要技术全解】中兴F50Pro软路由与底层救砖交接文档.md                 # 📖 深度技术架构与排障完全手册
-├── bin/                                                   # 核心固件与工具依赖（无需额外配置）
-│   ├── adb                                                # macOS 通用架构 ADB
-│   ├── spd_dump_mac                                       # macOS 通用架构展锐 BootROM 刷机工具
-│   ├── tos.bin                                            # TrustOS 补丁（Root + 无线ADB）
-│   ├── magisk.img                                         # Magisk init_boot 补丁（免密提权）
-│   ├── UFI-TOOLS.apk                                      # 增强 Web 管理后台 (2333 端口)
-│   └── ...                                                # 引导加载与签名绕过补丁
-└── scheme_b/                                              # 5G CPE 软路由资产库
-    ├── mihomo                                             # ARM64 Mihomo (Clash.Meta) 内核
-    ├── tailscale / tailscaled                             # ARM64 Tailscale 异地组网套件
-    ├── config.yaml                                        # 针对 5G 调优的透明代理配置 (MTU 1400)
-    ├── autorun.sh                                         # 开机自启看门狗 (基带 IP 探针 + 进程/TUN 守护)
-    ├── start.sh / stop.sh / status.sh                     # 防火墙与服务控制脚本
-    ├── merge_sub.py                                       # 智能订阅合并器（保留 5G 软路由优化项）
-    └── ui/                                                # MetaCubeXD WebUI 面板 (已预置免填配置)
+├── 【5G CPE透明软路由】Mihomo与Tailscale穿透中心.command  # 🌟 Main 5G CPE Transparent Proxy Controller
+├── F50Pro一键工具箱.command                               # 🌟 General Utility Toolkit (Root/UFI Web/Rescue)
+├── 【一键全量备份固件】F50Pro.command                       # 🛡️ Full Chip Partition Backup Tool
+├── 【一键底层救砖还原】F50Pro.command                       # 🚑 100% BootROM Brick Recovery Tool
+├── README.md                                              # English Documentation
+├── README_CN.md                                           # Chinese Documentation
+├── LICENSE                                                # MIT License with Anti-Scalping Clause
+├── 【重要技术全解】中兴F50Pro软路由与底层救砖交接文档.md                 # 📖 Technical Architecture & Handover Manual
+├── bin/                                                   # Core Tools & Firmware Dependencies
+│   ├── adb                                                # Universal macOS ADB
+│   ├── spd_dump_mac                                       # Universal macOS Unisoc BootROM Flash Tool
+│   ├── tos.bin                                            # TrustOS Patch (Root + Wireless ADB)
+│   ├── magisk.img                                         # Magisk init_boot Patch (Zero-Prompt Elevation)
+│   ├── UFI-TOOLS.apk                                      # Web Management Console (Port 2333)
+│   └── ...                                                # Bootloaders & Signature Bypass Payloads
+└── scheme_b/                                              # 5G CPE Soft Router Assets
+    ├── mihomo                                             # ARM64 Mihomo (Clash.Meta) Core
+    ├── tailscale / tailscaled                             # ARM64 Tailscale Mesh Networking Suite
+    ├── config.yaml                                        # 5G-Optimized Transparent Proxy Config (MTU 1400)
+    ├── autorun.sh                                         # Autostart Watchdog (5G IP Probe + Dual-Health Guard)
+    ├── start.sh / stop.sh / status.sh                     # Service & Firewall Orchestration Scripts
+    ├── merge_sub.py                                       # Smart Subscription Merger (Preserving 5G TUN Config)
+    └── ui/                                                # MetaCubeXD Web Dashboard (Pre-Configured)
 ```
 
 ---
 
-## 🚀 极速上手指南
+## 🚀 Quick Start Guide
 
-### 1. 下载工具包
-前往 [Releases 页面](../../releases) 下载已打包好的 `中兴F50Pro_macOS一键工具包_shuangye.zip` 并解压。
+### 1. Download
+Download the pre-packaged archive `中兴F50Pro_macOS一键工具包_shuangye.zip` from the [Releases page](../../releases) and extract it.
 
-### 2. 部署 5G CPE 透明软路由 ＋ Tailscale（推荐）
-1. 双击运行 **`【5G CPE透明软路由】Mihomo与Tailscale穿透中心.command`**。
-2. 输入 **`1`**（一键刷入开机自启补丁）。
-3. 按照提示输入您的 Mac 开机密码，然后将断开电源的 F50 Pro 插入 Mac USB 口。
-4. 工具会自动完成 BootROM 刷入并引导开机；开机后脚本会**自动连续部署软路由全套组件与开机自启看门狗**！
-5. 在主菜单输入 **`5`**，粘贴您的 Clash 机场订阅链接（智能合并节点与分流规则，保留 5G CPE 优化参数）。
-6. 在主菜单输入 **`3`**，浏览器将直接打开 Web 控制面板 (`http://192.168.0.1:9090/ui`)。
+### 2. Deploy 5G CPE Transparent Proxy + Tailscale (Recommended)
+1. Double-click **`【5G CPE透明软路由】Mihomo与Tailscale穿透中心.command`**.
+2. Press **`1`** (One-click autostart & root patch).
+3. Enter your Mac administrator password when prompted, then connect the powered-off F50 Pro to your Mac USB port.
+4. The tool automatically completes BootROM flashing and boots the device. Once online, the script **automatically deploys the soft router components and autostart watchdog**.
+5. Return to the main menu and press **`5`** to paste your Clash subscription link (intelligently merged while preserving 5G CPE MTU/TUN optimizations).
+6. Press **`3`** to launch the Web dashboard directly (`http://192.168.0.1:9090/ui`).
 
-### 3. 日常使用
-- 以后出门只需将 F50 Pro 插在任何充电宝或车充上，开机 20 秒后自动上线透明代理，无需再次连接电脑！
-- 所有连入 F50 Pro Wi-Fi 的手机、平板、电脑均无感科学上网，尽享 100Mbps 满血带宽。
-
----
-
-## 🚑 底层全量备份与终极救砖
-
-在对设备进行折腾前，强烈建议执行一次全量备份：
-1. 运行 **`【一键全量备份固件】F50Pro.command`**，拔插一次设备，工具会自动克隆全部硬件芯片分区至本地。
-2. 若设备意外变砖（无法开机、卡开机中兴 Logo），随时运行 **`【一键底层救砖还原】F50Pro.command`**，拔插设备即可在 30 秒内原样回写恢复出厂！
-
-> **⚠️ 隐私与安全提示**：备份生成的 `backup/` 目录中包含您设备的专属物理 IMEI 号和基带校准数据，**切勿上传到公共网络或 GitHub**。本项目 `.gitignore` 已默认严格忽略该目录。
+### 3. Everyday Use
+- Simply connect the F50 Pro to any power bank or car charger. The transparent proxy comes online automatically within 20 seconds of cold boot—no PC required!
+- All connected devices (phones, laptops, tablets, smart TVs) enjoy line-rate 100 Mbps transparent acceleration.
 
 ---
 
-## 🛡️ 严正声明：永久开源免费 · 严禁商用倒卖
+## 🚑 Full Firmware Backup & Brick Recovery
 
-> **⚠️ 致所有使用者（尤其是从电商平台看到本项目的用户）：**
+Before modifying your device, a full physical partition backup is strongly recommended:
+1. Run **`【一键全量备份固件】F50Pro.command`**, reconnect the device once, and the tool will clone all hardware partitions to your local disk.
+2. If your device ever soft-bricks (bootloop, stuck on ZTE logo), run **`【一键底层救砖还原】F50Pro.command`** and plug in the device to restore factory firmware within 30 seconds via BootROM!
+
+> **⚠️ Privacy & Security Notice**: The generated `backup/` folder contains your device's unique physical IMEI, IMSI, and NVRAM RF calibration data. **Never upload this directory to any public repository or online drive.** The project `.gitignore` excludes this directory by default.
+
+---
+
+## 🛡️ Anti-Scalping & Non-Commercial Notice
+
+> **⚠️ Notice to all users (especially those purchasing from e-commerce platforms):**
 > 
-> 1. **完全免费**：本项目为作者 `shuangye` 在业余时间攻坚原创的公益开源成果，代码、固件补丁与全套工具包**永久 100% 免费**向所有人开放。
-> 2. **打击倒卖欺诈**：任何个人、商家在**闲鱼、淘宝、拼多多、微信小程序、QQ群、B站**等平台将本项目打包售卖、付费加群提供、或以此提供“有偿远程代刷服务”的行为，均属于**侵权非法倒卖与欺诈消费**！
-> 3. **维权举报**：若您系花钱购得本工具，您已遭遇欺诈，请立即向平台投诉举报卖家诈骗并申请全额退款。
-> 4. **防伪认准**：请认准作者唯一官方开源发布地址：[`https://github.com/Tai1win10c/zte-f50pro-macos-toolkit`](https://github.com/Tai1win10c/zte-f50pro-macos-toolkit)。任何篡改作者署名、二次打包加壳的“魔改版”可能植入后门木马，请切勿信任。
+> 1. **100% Free & Open Source**: This project is developed by `shuangye` as a non-profit open-source initiative. All source code, patches, and binaries are **permanently free for public use**.
+> 2. **Prohibition of Paid Resale**: Any individual or merchant selling this toolkit, bundling it behind paid paywalls, or charging for "remote flashing services" on **Taobao, Xianyu, Pinduoduo, WeChat, Bilibili**, or any other platform is engaging in unauthorized infringement and fraud.
+> 3. **Report Fraud**: If you paid money to obtain this tool, you have been defrauded. Please report the merchant to the respective platform immediately and request a full refund.
+> 4. **Authentic Source**: Only obtain this tool from the official repository: [`https://github.com/Tai1win10c/zte-f50pro-macos-toolkit`](https://github.com/Tai1win10c/zte-f50pro-macos-toolkit). Repackaged third-party distributions may contain malicious trojans or adware.
 
 ---
 
-## 👨‍💻 关于作者 & 关注交流
+## 👨‍💻 About the Author & Community
 
-- **项目作者**: **shuangye** ([@Tai1win10c](https://github.com/Tai1win10c))
-- **B 站主页**: 视频实操教程与后续固件更新动态筹备中，敬请关注！*(账号确定后将第一时间公布)*
-- **欢迎 Star ⭐️**: 如果本项目帮到了你，请给本项目点亮一颗 **Star**，这是对开源作者最大的支持与鼓励！
-
----
-
-## ⚖️ 开源协议、致谢与灵感参考
-
-- **作者 / 架构设计**: **shuangye** ([@Tai1win10c](https://github.com/Tai1win10c))
-- **开源协议**: 本项目遵循带有【反商业倒卖附加条款】的 [MIT License](LICENSE)。任何二次分发均必须严格保留原作者署名与开源仓库地址，且不得用于任何商业营利。
-- **项目致谢与灵感来源**:
-  - **UFI-TOOLS 灵感与技术参考**: 感谢 [kanoqwq/UFI-TOOLS](https://github.com/kanoqwq/UFI-TOOLS)（参见 [UFI-TOOLS 随身 WiFi 使用文档](https://github.com/kanoqwq/UFI-TOOLS/blob/http-server-version/User_Doc.md#32-%E5%AE%89%E8%A3%85%E5%89%8D%E8%BF%9E%E6%8E%A5%E8%AE%BE%E5%A4%87)），为随身 WiFi 设备开机提权、Fastboot/BootROM 交互及增强 Web 后台提供了宝贵的技术思路与启发。
-  - **透明软路由内核**: [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) 优秀的透明路由代理内核。
-  - **Web 控制面板**: [MetaCubeX/metacubexd](https://github.com/MetaCubeX/metacubexd) 优秀的 Web 仪表盘。
-  - **异地互联组网**: [Tailscale](https://tailscale.com) 优秀的网状虚拟局域网。
-  - **底层刷机通信**: [spreadtrum_flash](https://github.com/handsomehack/spreadtrum_flash) 提供紫光展锐 BootROM 芯片级刷机通信基础。
+- **Author / Architecture**: **shuangye** ([@Tai1win10c](https://github.com/Tai1win10c))
+- **Bilibili**: Video walkthroughs and firmware updates in preparation.
+- **Support the Project ⭐️**: If this project helped you, please give it a **Star** on GitHub—it is the greatest encouragement to open-source creators!
 
 ---
 
-### 免责声明
-本工具仅供网络技术研究与个人随身 WiFi 优化交流使用。请合法合规使用网络。作者不对因第三方不当操作或硬件老化导致的设备损坏承担连带责任。
+## ⚖️ License, Acknowledgments & Technical Inspiration
+
+- **Author / Lead**: **shuangye** ([@Tai1win10c](https://github.com/Tai1win10c))
+- **License**: Released under the [MIT License with Anti-Commercial Scalping Rider](LICENSE). All redistributions must strictly preserve the original author attribution and upstream repository link, and may not be used for commercial gain.
+- **Acknowledgments & Upstream Projects**:
+  - **UFI-TOOLS Inspiration & Concept**: Special thanks to [kanoqwq/UFI-TOOLS](https://github.com/kanoqwq/UFI-TOOLS) (see [UFI-TOOLS Documentation](https://github.com/kanoqwq/UFI-TOOLS/blob/http-server-version/User_Doc.md#32-%E5%AE%89%E8%A3%85%E5%89%8D%E8%BF%9E%E6%8E%A5%E8%AE%BE%E5%A4%87)) for pioneering research on MiFi BootROM flashing, headless root authorization, and enhanced web utilities.
+  - **Routing Proxy Core**: [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) for the exceptional Linux routing core.
+  - **Web Dashboard**: [MetaCubeX/metacubexd](https://github.com/MetaCubeX/metacubexd) for the clean Web interface.
+  - **Mesh Networking**: [Tailscale](https://tailscale.com) for secure zero-config virtual networking.
+  - **BootROM Communication**: [spreadtrum_flash](https://github.com/handsomehack/spreadtrum_flash) for low-level Unisoc BootROM protocol foundations.
+
+---
+
+### Disclaimer
+This toolkit is provided solely for networking research and personal optimization. Please comply with local telecommunications regulations. The author assumes no liability for hardware damage or service disruption resulting from improper operation.
