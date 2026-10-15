@@ -136,13 +136,13 @@ graph TD
 > 1. **完全免费**：本项目为作者 `shuangye` 在业余时间攻坚原创的公益开源成果，代码、固件补丁与全套工具包**永久 100% 免费**向所有人开放。
 > 2. **打击倒卖欺诈**：任何个人、商家在**闲鱼、淘宝、拼多多、微信小程序、QQ群、B站**等平台将本项目打包售卖、付费加群提供、或以此提供“有偿远程代刷服务”的行为，均属于**侵权非法倒卖与欺诈消费**！
 > 3. **维权举报**：若您系花钱购得本工具，您已遭遇欺诈，请立即向平台投诉举报卖家诈骗并申请全额退款。
-> 4. **防伪认准**：请认准作者唯一官方开源发布地址：`https://github.com/shuangye/zte-f50pro-macos-toolkit`。任何篡改作者署名、二次打包加壳的“魔改版”可能植入后门木马，请切勿信任。
+> 4. **防伪认准**：请认准作者唯一官方开源发布地址：[`https://github.com/Tai1win10c/zte-f50pro-macos-toolkit`](https://github.com/Tai1win10c/zte-f50pro-macos-toolkit)。任何篡改作者署名、二次打包加壳的“魔改版”可能植入后门木马，请切勿信任。
 
 ---
 
 ## ⚖️ 开源协议与致谢
 
-- **作者 / 架构设计**: [shuangye](https://github.com/shuangye)
+- **作者 / 架构设计**: **shuangye** ([@Tai1win10c](https://github.com/Tai1win10c))
 - **开源协议**: 本项目遵循带有【反商业倒卖附加条款】的 [MIT License](LICENSE)。任何二次分发均必须严格保留原作者署名与开源仓库地址，且不得用于任何商业营利。
 - **项目致谢**:
   - [spreadtrum_flash](https://github.com/handsomehack/spreadtrum_flash) 提供紫光展锐 BootROM 芯片级刷机通信基础
