@@ -1,6 +1,6 @@
 #!/bin/bash
 # ========================================================
-# 中兴 F50 Pro 5G CPE 透明软路由代理 ＋ Tailscale 异地穿透中心
+# 中兴 F50 Pro 方案B：Mihomo 透明软路由 + Tailscale 内网穿透中心
 # 作者: shuangye
 # ========================================================
 
@@ -40,7 +40,7 @@ check_root_ready() {
         echo "offline"
         return 1
     fi
-    local res=$($ADB_BIN -s "$dev" shell "su -c 'id'" 2>/dev/null)
+    local res=$($ADB_BIN -s "$dev" shell "su -c 'id' 2>/dev/null || /debug_ramdisk/su -c 'id' 2>/dev/null")
     if echo "$res" | grep -q "uid=0"; then
         echo "ready"
         return 0
@@ -99,7 +99,7 @@ flash_boot_patch() {
         local root_status=$(check_root_ready)
         if [ "$root_status" = "ready" ]; then
             echo "🎉 验证成功！系统已完全激活永久 Root 与开机自启环境！"
-            echo ">>> 正在为您自动下发 5G CPE 透明软路由核心组件与高可用看门狗..."
+            echo ">>> 正在为您自动下发方案B全套组件与高可用看门狗..."
             deploy_scheme_b
         else
             echo "提示：设备已开机，若 Root 尚未就绪，请等待 10 秒后重新运行状态检查。"
@@ -112,7 +112,7 @@ flash_boot_patch() {
 
 deploy_scheme_b() {
     echo "========================================================"
-    echo "  📦 正在部署/同步 5G CPE 透明软路由核心组件与自启看门狗"
+    echo "  📦 正在部署/同步 方案B 核心组件与自启看门狗"
     echo "  作者: shuangye"
     echo "========================================================"
     local dev=$(ensure_adb_connected)
@@ -124,7 +124,7 @@ deploy_scheme_b() {
         return 1
     fi
 
-    echo ">>> 正在推送核心组件 (Mihomo, Tailscale, MetaCubeXD WebUI, 全球规则库)..."
+    echo ">>> 正在推送方案B核心组件 (Mihomo, Tailscale, MetaCubeXD WebUI, 全球规则库)..."
     $ADB_BIN -s "$dev" shell "mkdir -p /data/local/tmp/scheme_b"
     $ADB_BIN -s "$dev" push "$BASE_DIR/scheme_b/." /data/local/tmp/scheme_b/
     $ADB_BIN -s "$dev" shell "chmod -R 755 /data/local/tmp/scheme_b"
@@ -132,12 +132,12 @@ deploy_scheme_b() {
     echo ">>> 正在部署 Magisk 开机自启看门狗 (/data/adb/service.d/mihomo_autostart.sh)..."
     $ADB_BIN -s "$dev" shell "su -c 'mkdir -p /data/adb/service.d && cp -f /data/local/tmp/scheme_b/autorun.sh /data/adb/service.d/mihomo_autostart.sh && chmod 755 /data/adb/service.d/mihomo_autostart.sh /data/local/tmp/autorun.sh'"
 
-    echo ">>> 正在启动 5G CPE 透明软路由与穿透服务..."
+    echo ">>> 正在启动方案B全部服务..."
     $ADB_BIN -s "$dev" shell "su -c 'cd /data/local/tmp/scheme_b && sh stop.sh >/dev/null 2>&1; sh start.sh'"
     sleep 2
 
     echo "--------------------------------------------------------"
-    echo "🎉 恭喜！5G CPE 透明软路由全套组件与开机自启看门狗已全部部署就绪！"
+    echo "🎉 恭喜！方案B全套组件与开机自启看门狗已全部部署就绪！"
     echo "Web 控制面板: http://192.168.0.1:9090/ui"
     echo "--------------------------------------------------------"
 }
@@ -219,14 +219,22 @@ import_subscription() {
     $ADB_BIN -s "$dev" shell "chmod 755 /data/local/tmp/scheme_b/config.yaml"
 
     echo "正在热重载 Mihomo 内核..."
-    curl -s -X PUT http://192.168.0.1:9090/configs -d '{"path": "/data/local/tmp/scheme_b/config.yaml", "payload": ""}' > /dev/null 2>&1
+    local secret_val=$(grep "secret:" "$BASE_DIR/scheme_b/config.yaml" 2>/dev/null | awk '{print $2}' | tr -d '"\r\n')
+    local auth_header=""
+    if [ -n "$secret_val" ]; then
+        auth_header="-H \"Authorization: Bearer $secret_val\""
+    fi
+    curl -s -X PUT http://192.168.0.1:9090/configs \
+        -H "Authorization: Bearer $secret_val" \
+        -H "Content-Type: application/json" \
+        -d '{"path": "/data/local/tmp/scheme_b/config.yaml", "payload": ""}' > /dev/null 2>&1
     
     echo "🎉 订阅更新完成！节点与规则已生效。"
 }
 
 view_status() {
     echo "========================================================"
-    echo "  📊 F50 Pro 5G CPE 透明软路由 运行状态报告"
+    echo "  📊 F50 Pro 方案B 运行状态报告"
     echo "========================================================"
     local dev=$(ensure_adb_connected)
     if [ -z "$dev" ]; then
@@ -253,13 +261,13 @@ view_status() {
 }
 
 start_services() {
-    echo "正在启动 5G CPE 透明软路由与 Tailscale 服务..."
+    echo "正在启动方案B服务..."
     local dev=$(ensure_adb_connected)
     if [ -z "$dev" ]; then echo "❌ 设备离线"; return 1; fi
     # 检查如果设备缺少组件则自动先下发
     local is_missing=$($ADB_BIN -s "$dev" shell "[ -f /data/local/tmp/scheme_b/mihomo ] || echo 'missing'")
     if [ "$is_missing" = "missing" ]; then
-        echo "⚠️ 检测到设备尚未下发软路由组件，正在自动部署..."
+        echo "⚠️ 检测到设备尚未下发方案B组件，正在自动部署..."
         deploy_scheme_b
     else
         $ADB_BIN -s "$dev" shell "su -c 'sh /data/local/tmp/scheme_b/start.sh'"
@@ -270,15 +278,15 @@ start_services() {
 }
 
 stop_services() {
-    echo "正在停止透明软路由服务..."
+    echo "正在停止方案B服务..."
     local dev=$(ensure_adb_connected)
     if [ -z "$dev" ]; then echo "❌ 设备离线"; return 1; fi
     $ADB_BIN -s "$dev" shell "su -c 'sh /data/local/tmp/scheme_b/stop.sh'"
-    echo "🎉 透明软路由服务已停止，网络已恢复中兴官方原生直连状态！"
+    echo "🎉 方案B服务已停止，网络已恢复中兴官方原生直连状态！"
 }
 
 restart_services() {
-    echo "正在重启透明软路由与穿透服务..."
+    echo "正在重启方案B服务..."
     local dev=$(ensure_adb_connected)
     if [ -z "$dev" ]; then echo "❌ 设备离线"; return 1; fi
     $ADB_BIN -s "$dev" shell "su -c 'sh /data/local/tmp/scheme_b/stop.sh && sh /data/local/tmp/scheme_b/start.sh'"
@@ -290,20 +298,20 @@ restart_services() {
 while true; do
     clear
     echo "================================================================================"
-    echo "  🚀 中兴 F50 Pro 5G CPE 透明软路由代理 ＋ Tailscale 穿透管理中心"
+    echo "  🚀 中兴 F50 Pro 方案B：Mihomo 透明软路由 + Tailscale 穿透管理中心"
     echo "  🔥 原创作者: shuangye  |  开源项目: 永久完全免费！"
     echo "  ⚠️ 严正防诈警告: 本工具完全免费开源，严禁任何形式的倒卖、转售或有偿代刷！"
     echo "     若您是在闲鱼、淘宝、拼多多等平台花钱购买的，您已被骗，请立即向平台举报退款！"
     echo "================================================================================"
     echo " [1] ⚡ 一键刷入开机自启补丁 (BootROM 芯片直刷，只需拔插1次)"
-    echo " [2] 📦 一键部署/同步 软路由核心组件与自启看门狗 (新机/复用一键就绪)"
+    echo " [2] 📦 一键部署/同步 方案B 核心组件与自启看门狗 (新机/复用一键就绪)"
     echo " [3] 🌐 打开 Mihomo Web 控制面板 (http://192.168.0.1:9090/ui)"
     echo " [4] 🔑 Tailscale 账号绑定与内网互联 (显示登录链接/二维码)"
     echo " [5] 📥 导入/更新 Clash 订阅链接 (输入订阅URL自动同步节点)"
     echo " [6] 📊 查看运行状态 (Mihomo/Tailscale/5G网络/DNS重定向)"
-    echo " [7] ▶️ 启动透明软路由与穿透服务 (Mihomo + Tailscale)"
-    echo " [8] ⏹️ 停止透明软路由服务 (恢复官方原生直连模式)"
-    echo " [9] 🔄 重启透明软路由与穿透服务"
+    echo " [7] ▶️ 启动所有方案B服务 (Mihomo + Tailscale)"
+    echo " [8] ⏹️ 停止所有方案B服务 (恢复原生路由器模式)"
+    echo " [9] 🔄 重启所有方案B服务"
     echo " [0] 退出"
     echo "================================================================================"
     read -p "请输入选项 [0-9]: " choice

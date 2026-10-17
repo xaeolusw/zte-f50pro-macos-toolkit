@@ -1,7 +1,7 @@
 #!/system/bin/sh
 
 # ========================================================
-# 中兴 F50 Pro 5G CPE 透明软路由: 开机自启看门狗守护脚本
+# 中兴 F50 Pro 方案B: 开机自启看门狗守护脚本
 # 作者: shuangye (https://github.com/shuangye)
 # 本项目永久开源免费，严禁任何形式的商业倒卖与转售
 # ========================================================
@@ -10,6 +10,17 @@
     trap '' HUP
     export PATH=/sbin:/system/bin:/system/xbin:/product/bin:/vendor/bin:$PATH
     LOG="/data/local/tmp/autostart.log"
+
+    # 确保 root 环境与 su 命令全局可用
+    if [ ! -f /product/bin/su ] && [ -x /debug_ramdisk/su ]; then
+        mkdir -p /data/local/tmp/pbin 2>/dev/null
+        mount -t tmpfs tmpfs /data/local/tmp/pbin 2>/dev/null
+        cp -a /product/bin/* /data/local/tmp/pbin/ 2>/dev/null
+        ln -sf /debug_ramdisk/su /data/local/tmp/pbin/su 2>/dev/null
+        ln -sf /debug_ramdisk/magisk /data/local/tmp/pbin/magisk 2>/dev/null
+        chmod -R 755 /data/local/tmp/pbin 2>/dev/null
+        mount --bind /data/local/tmp/pbin /product/bin 2>/dev/null
+    fi
 
     echo "[$(date)] 看门狗已启动，等待 5G 基带注册与 IP 获取..." > "$LOG"
 

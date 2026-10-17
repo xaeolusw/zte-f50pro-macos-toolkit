@@ -97,7 +97,7 @@ while true; do
     echo " [7] 🛡️ 芯片底层全量备份 (BootROM 镜像，救砖必备)"
     echo " [8] 🚑 芯片底层一键救砖还原 (从备份文件快速恢复)"
     echo " [9] 📶 网络急救：强制切回外置实体 SIM 卡 (解决无服务)"
-    echo " [10] 🛸 5G CPE 透明软路由代理 ＋ Tailscale 穿透管理中心"
+    echo " [10] 🛸 方案B：Mihomo 透明软路由 + Tailscale 穿透管理中心"
     echo " [0] 退出"
     echo "========================================================"
     read -p "请输入选项 [0-10]: " choice
@@ -294,7 +294,7 @@ svc power stayon true 2>/dev/null
             read dummy
             ;;
         10)
-            ./【5G CPE透明软路由】Mihomo与Tailscale穿透中心.command
+            ./【方案B】软路由与穿透管理中心.command
             ;;
         0)
             echo "已退出。"

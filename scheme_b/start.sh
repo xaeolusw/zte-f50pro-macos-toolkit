@@ -1,6 +1,6 @@
 #!/system/bin/sh
 # ========================================================
-# F50 Pro 5G CPE Transparent Proxy & Tailscale
+# F50 Pro Scheme B: Start Mihomo & Tailscale
 # Author: shuangye (https://github.com/shuangye)
 # Open-source Free Project - Prohibited for commercial sale
 # ========================================================
@@ -8,7 +8,7 @@
 DIR="/data/local/tmp/scheme_b"
 LOG="$DIR/service.log"
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting 5G CPE Soft Router & Tailscale services..." >> "$LOG"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting Scheme B services..." >> "$LOG"
 
 # 1. 开启系统 IP 转发
 sysctl -w net.ipv4.ip_forward=1 >> "$LOG" 2>&1
@@ -46,4 +46,4 @@ if ! pgrep -f "$DIR/tailscaled" > /dev/null; then
     HOME=$DIR nohup $DIR/tailscaled --state=$DIR/tailscale.state --socket=$DIR/tailscaled.sock --port=41641 > $DIR/tailscaled.log 2>&1 &
 fi
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] 5G CPE Soft Router & Tailscale services successfully started" >> "$LOG"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Scheme B services successfully started" >> "$LOG"

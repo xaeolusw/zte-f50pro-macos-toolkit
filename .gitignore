@@ -3,6 +3,8 @@ backup/
 backup_adb/
 *.img.bak
 *.bin.bak
+*.bak*
+partition_*.xml
 
 # 运行时日志与套接字状态
 *.log
