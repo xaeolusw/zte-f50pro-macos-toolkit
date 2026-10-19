@@ -1,22 +1,44 @@
-# 隐私与设备备份（绝对禁止提交，包含个人设备唯一 IMEI / IMSI / ICCID / 射频NVRAM）
-backup/
+# ========================================================
+# 中兴 F50 Pro macOS 工具箱 - Git 忽略规则配置
+# ========================================================
+
+# 1. 个人订阅与敏感软路由配置（绝对严禁提交，防止泄露节点密码与Token）
+scheme_b/config.yaml
+scheme_b/tailscale.state*
+merged_config.yaml
+/tmp/merged_config.yaml
+
+# 2. 设备唯一隐私与全量固件备份（包含个人设备唯一 IMEI / IMSI / ICCID / 射频NVRAM）
+backup*/
 backup_adb/
 *.img.bak
 *.bin.bak
 *.bak*
-partition_*.xml
 
-# 运行时日志与套接字状态
+# 3. 紫光展锐芯片底层通信与动态导出分区文件
+partition*.xml
+sprdpart
+
+# 4. 运行时日志、套接字与状态
 *.log
 *.state
 *.sock
 
-# 订阅合并生成文件与个人节点
-merged_config.yaml
+# 5. Python 编译缓存
+__pycache__/
+*.py[cod]
+*$py.class
 
-# macOS 临时文件
+# 6. macOS 系统生成的额外元数据与临时文件
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
+
+# 7. IDE / 编辑器工作区配置
+.idea/
+.vscode/
+*.swp
+*~
+*.bak

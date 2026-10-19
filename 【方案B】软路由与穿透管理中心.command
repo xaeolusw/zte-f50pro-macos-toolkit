@@ -22,6 +22,11 @@ ADB_BIN="$BASE_DIR/bin/adb"
 SPD_BIN="$BASE_DIR/bin/spd_dump_mac"
 chmod +x "$ADB_BIN" "$SPD_BIN" 2>/dev/null
 
+# 确保软路由配置文件存在（首次使用自动从模板初始化）
+if [ ! -f "$BASE_DIR/scheme_b/config.yaml" ] && [ -f "$BASE_DIR/scheme_b/config.example.yaml" ]; then
+    cp "$BASE_DIR/scheme_b/config.example.yaml" "$BASE_DIR/scheme_b/config.yaml"
+fi
+
 ensure_adb_connected() {
     $ADB_BIN connect 192.168.0.1:5555 >/dev/null 2>&1
     local dev=$($ADB_BIN devices 2>/dev/null | grep -E "\bdevice\b" | head -n 1 | awk '{print $1}')
@@ -124,20 +129,49 @@ deploy_scheme_b() {
         return 1
     fi
 
+    # 保护已订阅的节点：如果设备上已有配置且本地配置节点较少，先拉取设备配置做本地持久化
+    local dev_proxies=$($ADB_BIN -s "$dev" shell "grep -c '^- {' /data/local/tmp/scheme_b/config.yaml 2>/dev/null || echo 0" | tr -d '\r\n')
+    local local_proxies=$(grep -c '^- {' "$BASE_DIR/scheme_b/config.yaml" 2>/dev/null || echo 0)
+    if [ "$dev_proxies" -gt "$local_proxies" ]; then
+        echo ">>> 检测到设备已有 $dev_proxies 个订阅节点，自动同步并保留到本地配置..."
+        $ADB_BIN -s "$dev" pull /data/local/tmp/scheme_b/config.yaml "$BASE_DIR/scheme_b/config.yaml" >/dev/null 2>&1
+    fi
+
     echo ">>> 正在推送方案B核心组件 (Mihomo, Tailscale, MetaCubeXD WebUI, 全球规则库)..."
     $ADB_BIN -s "$dev" shell "mkdir -p /data/local/tmp/scheme_b"
     $ADB_BIN -s "$dev" push "$BASE_DIR/scheme_b/." /data/local/tmp/scheme_b/
     $ADB_BIN -s "$dev" shell "chmod -R 755 /data/local/tmp/scheme_b"
 
-    echo ">>> 正在部署 Magisk 开机自启看门狗 (/data/adb/service.d/mihomo_autostart.sh)..."
-    $ADB_BIN -s "$dev" shell "su -c 'mkdir -p /data/adb/service.d && cp -f /data/local/tmp/scheme_b/autorun.sh /data/adb/service.d/mihomo_autostart.sh && chmod 755 /data/adb/service.d/mihomo_autostart.sh /data/local/tmp/autorun.sh'"
+    echo ">>> 正在部署 Magisk + UFI-TOOLS 双保险自启看门狗..."
+    $ADB_BIN -s "$dev" shell "su -c 'mkdir -p /data/adb/service.d && cp -f /data/local/tmp/scheme_b/autorun.sh /data/adb/service.d/mihomo_autostart.sh && cp -f /data/local/tmp/scheme_b/autorun.sh /data/local/tmp/autorun.sh && chmod 755 /data/adb/service.d/mihomo_autostart.sh /data/local/tmp/autorun.sh'"
+
+    # 部署 UFI-TOOLS (2333) 联动保活脚本，确保即使 Magisk 启动延迟也能 100% 拉起 5555 和 9090
+    $ADB_BIN -s "$dev" shell "su -c '
+cat << \"EOF\" > /sdcard/ufi_tools_boot.sh
+#!/system/bin/sh
+setprop service.adb.tcp.port 5555
+setprop persist.adb.tcp.port 5555
+start adbd
+if [ -f /data/adb/service.d/00_root_env.sh ]; then sh /data/adb/service.d/00_root_env.sh; fi
+if [ -f /data/local/tmp/autorun.sh ]; then sh /data/local/tmp/autorun.sh & fi
+sync
+EOF
+chmod 755 /sdcard/ufi_tools_boot.sh
+
+cat << \"EOF\" > /sdcard/ufi_tools_schedule.sh
+#!/system/bin/sh
+if ! pidof adbd >/dev/null 2>&1; then setprop service.adb.tcp.port 5555; start adbd; fi
+if ! pidof mihomo >/dev/null 2>&1 && [ -f /data/local/tmp/scheme_b/start.sh ]; then cd /data/local/tmp/scheme_b && sh start.sh & fi
+EOF
+chmod 755 /sdcard/ufi_tools_schedule.sh
+'"
 
     echo ">>> 正在启动方案B全部服务..."
     $ADB_BIN -s "$dev" shell "su -c 'cd /data/local/tmp/scheme_b && sh stop.sh >/dev/null 2>&1; sh start.sh'"
     sleep 2
 
     echo "--------------------------------------------------------"
-    echo "🎉 恭喜！方案B全套组件与开机自启看门狗已全部部署就绪！"
+    echo "🎉 恭喜！方案B全套组件与双保险自启看门狗已全部部署就绪！"
     echo "Web 控制面板: http://192.168.0.1:9090/ui"
     echo "--------------------------------------------------------"
 }
@@ -207,6 +241,9 @@ import_subscription() {
         echo "❌ 配置合并失败，请检查链接或文件格式。"
         return 1
     fi
+
+    # 永久保存到本地工具包，防止后续部署或同步时被空白模板覆盖
+    cp -f /tmp/merged_config.yaml "$BASE_DIR/scheme_b/config.yaml"
 
     local dev=$(ensure_adb_connected)
     if [ -z "$dev" ]; then
