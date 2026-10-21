@@ -130,8 +130,8 @@ deploy_scheme_b() {
     fi
 
     # 保护已订阅的节点：如果设备上已有配置且本地配置节点较少，先拉取设备配置做本地持久化
-    local dev_proxies=$($ADB_BIN -s "$dev" shell "grep -c '^- {' /data/local/tmp/scheme_b/config.yaml 2>/dev/null || echo 0" | tr -d '\r\n')
-    local local_proxies=$(grep -c '^- {' "$BASE_DIR/scheme_b/config.yaml" 2>/dev/null || echo 0)
+    local dev_proxies=$($ADB_BIN -s "$dev" shell "grep -c -E '^-[[:space:]]+(name:|{)' /data/local/tmp/scheme_b/config.yaml 2>/dev/null || echo 0" | tr -d '\r\n')
+    local local_proxies=$(grep -c -E '^-[[:space:]]+(name:|{)' "$BASE_DIR/scheme_b/config.yaml" 2>/dev/null || echo 0)
     if [ "$dev_proxies" -gt "$local_proxies" ]; then
         echo ">>> 检测到设备已有 $dev_proxies 个订阅节点，自动同步并保留到本地配置..."
         $ADB_BIN -s "$dev" pull /data/local/tmp/scheme_b/config.yaml "$BASE_DIR/scheme_b/config.yaml" >/dev/null 2>&1
@@ -221,29 +221,31 @@ import_subscription() {
     echo "  📥 导入/更新 Clash / Mihomo 订阅"
     echo "========================================================"
     echo "说明："
-    echo "  您可以粘贴订阅链接（URL），或者拖入本地 .yaml 配置文件。"
-    echo "  系统会自动保留 F50 Pro 的软路由透明代理 TUN/DNS 设置，"
-    echo "  并将所有代理节点与分流规则一键下发到设备并热重载！"
+    echo "  1. 粘贴订阅链接（URL）或拖入本地 yaml 文件，即可拉取最新机场节点。"
+    echo "  2. 【直接按回车】：直接重新应用 scheme_b/custom.yaml 自定节点与分流规则！"
+    echo "  系统会自动保留软路由 TUN/DNS 调优参数，并全自动融合自建与机场节点。"
     echo "--------------------------------------------------------"
-    read -p "请输入订阅 URL 或拖入本地 yaml 文件: " sub_input
+    read -p "请输入订阅 URL 或 yaml 文件 (直接按回车重新应用 custom.yaml): " sub_input
 
     # 去除首尾引号和空格
     sub_input=$(echo "$sub_input" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
 
     if [ -z "$sub_input" ]; then
-        echo "❌ 输入为空，已取消。"
-        return 1
+        echo ">>> 检测到直接回车，正在融合 scheme_b/custom.yaml 专属配置..."
+        sub_input="self"
     fi
 
+    local tmp_merged="$BASE_DIR/scheme_b/config.tmp.yaml"
     echo "正在合并配置并生成 F50 Pro 软路由配置..."
-    python3 "$BASE_DIR/scheme_b/merge_sub.py" "$sub_input" "$BASE_DIR/scheme_b/config.yaml" "/tmp/merged_config.yaml"
+    python3 "$BASE_DIR/scheme_b/merge_sub.py" "$sub_input" "$BASE_DIR/scheme_b/config.yaml" "$tmp_merged"
     if [ $? -ne 0 ]; then
         echo "❌ 配置合并失败，请检查链接或文件格式。"
+        rm -f "$tmp_merged" 2>/dev/null
         return 1
     fi
 
     # 永久保存到本地工具包，防止后续部署或同步时被空白模板覆盖
-    cp -f /tmp/merged_config.yaml "$BASE_DIR/scheme_b/config.yaml"
+    cp -f "$tmp_merged" "$BASE_DIR/scheme_b/config.yaml"
 
     local dev=$(ensure_adb_connected)
     if [ -z "$dev" ]; then
@@ -252,21 +254,29 @@ import_subscription() {
     fi
 
     echo "正在推送新配置到 F50 Pro 设备..."
-    $ADB_BIN -s "$dev" push /tmp/merged_config.yaml /data/local/tmp/scheme_b/config.yaml
+    $ADB_BIN -s "$dev" push "$tmp_merged" /data/local/tmp/scheme_b/config.yaml
     $ADB_BIN -s "$dev" shell "chmod 755 /data/local/tmp/scheme_b/config.yaml"
+    rm -f "$tmp_merged" 2>/dev/null
 
     echo "正在热重载 Mihomo 内核..."
     local secret_val=$(grep "secret:" "$BASE_DIR/scheme_b/config.yaml" 2>/dev/null | awk '{print $2}' | tr -d '"\r\n')
-    local auth_header=""
-    if [ -n "$secret_val" ]; then
-        auth_header="-H \"Authorization: Bearer $secret_val\""
-    fi
-    curl -s -X PUT http://192.168.0.1:9090/configs \
+    local reload_resp
+    reload_resp=$(curl -s -w '\n%{http_code}' -X PUT http://192.168.0.1:9090/configs \
         -H "Authorization: Bearer $secret_val" \
         -H "Content-Type: application/json" \
-        -d '{"path": "/data/local/tmp/scheme_b/config.yaml", "payload": ""}' > /dev/null 2>&1
-    
-    echo "🎉 订阅更新完成！节点与规则已生效。"
+        -d '{"path": "/data/local/tmp/scheme_b/config.yaml", "payload": ""}')
+    local reload_code=$(echo "$reload_resp" | tail -n1)
+    local reload_body=$(echo "$reload_resp" | sed '$d')
+
+    if [ "$reload_code" = "204" ]; then
+        echo "🎉 订阅更新完成！节点与规则已生效。"
+    else
+        echo "❌ 热重载失败 (HTTP $reload_code)，设备仍在运行旧配置。"
+        echo "   内核返回: ${reload_body:-无响应体}"
+        echo "   新配置已推送到设备: /data/local/tmp/scheme_b/config.yaml"
+        echo "   修复配置后可重新执行本操作，或在 Web 面板中手动重载。"
+        return 1
+    fi
 }
 
 view_status() {

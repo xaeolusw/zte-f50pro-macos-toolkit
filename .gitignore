@@ -4,6 +4,9 @@
 
 # 1. 个人订阅与敏感软路由配置（绝对严禁提交，防止泄露节点密码与Token）
 scheme_b/config.yaml
+scheme_b/config_modif.yaml
+scheme_b/custom.yaml
+scheme_b/config.tmp.yaml
 scheme_b/tailscale.state*
 merged_config.yaml
 /tmp/merged_config.yaml

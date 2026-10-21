@@ -1,0 +1,60 @@
+# ========================================================
+# 中兴 F50 Pro 软路由 - 专属自定义节点与分流策略模板 (示例)
+# 使用说明：
+# 复制本文件为 custom.yaml，填入您的自建/独享节点信息。
+# 每次更新机场订阅时，系统会自动将 custom.yaml 中的自建项与规则智能融合置顶。
+# ========================================================
+
+# 1. 您的自建 / 独享代理节点
+proxies:
+  # 示例 1: VLESS Reality 节点 (例如 DMIT VPS)
+  # - name: DMIT-LA-Reality
+  #   type: vless
+  #   server: 1.2.3.4
+  #   port: 443
+  #   uuid: 00000000-0000-0000-0000-000000000000
+  #   network: tcp
+  #   udp: true
+  #   tls: true
+  #   flow: xtls-rprx-vision
+  #   servername: www.ubuntu.com
+  #   client-fingerprint: chrome
+  #   reality-opts:
+  #     public-key: YourPublicKeyHere
+  #     short-id: YourShortIdHere
+
+  # 示例 2: 链式美国家宽节点 (指定 dialer-proxy 通过 DMIT 前置转接)
+  # - name: US-Home-via-DMIT
+  #   type: ss
+  #   server: your-home.ddns.net
+  #   port: 8388
+  #   cipher: aes-256-gcm
+  #   password: YourPassword
+  #   udp: true
+  #   dialer-proxy: DMIT-LA-Reality
+
+# 2. 您的专属策略组
+proxy-groups:
+  # - name: US-HOME-CHAIN
+  #   type: select
+  #   proxies:
+  #     - DMIT-LA-Reality
+  #     - US-Home-via-DMIT
+
+# 3. 指定要把自定节点注入到机场的哪些现有策略组（排在最前面，便于在 Web 面板点选）
+inject_into_groups:
+  # - group_name: "🧲 海外AI"
+  #   add_proxies:
+  #     - US-HOME-CHAIN
+  #     - DMIT-LA-Reality
+  # - group_name: "🙂 TAGSS"
+  #   add_proxies:
+  #     - US-HOME-CHAIN
+  #     - DMIT-LA-Reality
+
+# 4. 专属置顶分流规则（优先级最高，自上而下先匹配先命中）
+rules:
+  # VPS 服务器真实 IP 直连放行，防止握手陷入环路
+  # - IP-CIDR,1.2.3.4/32,DIRECT,no-resolve
+  # 特定网站强制走专属组或直连
+  # - DOMAIN-SUFFIX,example.com,DIRECT
